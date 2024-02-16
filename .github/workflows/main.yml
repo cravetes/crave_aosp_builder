@@ -151,8 +151,8 @@ jobs:
         repo sync -c -j$(nproc --all) --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync  && \
 
         # Set up build environment
-        export BUILD_USERNAME=${{ github.actor }} ; \
-        export BUILD_HOSTNAME=crave ; \
+        export BUILD_USERNAME=zaidan ; \
+        export BUILD_HOSTNAME=authority ; \
         source build/envsetup.sh && \
 
         # Build the ROM
