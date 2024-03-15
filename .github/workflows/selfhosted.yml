@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-name: Start job for building through Crave.
+name: Start job for building through Crave(self-hosted)
 on:
   workflow_dispatch:
     # Various inputs to simplify usage of workflow.
@@ -30,19 +30,19 @@ on:
       LOCAL_MANIFEST:
         description: "Personal local manifest [repository or raw]:"
         required: true
-        default: 'https://github.com/zaidanprjkt/local_manifest'
+        default: 'https://github.com/sounddrill31/local_manifests'
       LOCAL_MANIFEST_BRANCH:
         description: "Personal local manifest's branch:"
         required: false
-        default: 'rising'
+        default: 'lineage-oxygen'
       DEVICE_NAME:
         description: "Device's codename:"
         required: true
-        default: "lime"
+        default: "oxygen"
       PRODUCT_NAME:
         description: "Product to build:"
         required: true
-        default: "lineage_lime"
+        default: "lineage_oxygen"
       BUILD_COMMAND:
         description: 'Command to be used for compiling:'
         required: true
@@ -66,10 +66,50 @@ on:
         - 'no'
 
 jobs:
-  test:
-    name: Build using foss.crave.io
-      # Change this to self-hosted after setting up devspace as github actions runner
+  run-devspace-and-tmux:
     runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tmux
+
+      # Download and configure 'crave'.
+    - name: Configure the 'crave' environment
+      run: |
+        if [ "${DCDEVSPACE}" == "1" ]; then
+        echo 'No need to set up crave, we are already running in devspace!'
+        else
+          mkdir ${HOME}/bin/
+          curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
+          mv ${PWD}/crave ${HOME}/bin/
+          sudo ln -sf /home/${USER}/bin/crave /usr/bin/crave
+          envsubst < ${PWD}/crave.conf.sample >> ${PWD}/crave.conf
+          rm -rf ${PWD}/crave.conf.sample          
+        fi
+      env:
+        CRAVE_USERNAME: ${{  secrets.CRAVE_USERNAME  }}
+        CRAVE_TOKEN: ${{  secrets.CRAVE_TOKEN  }}
+
+    - name: Run crave devspace
+      run: |
+        crave devspace -- "if tmux has-session -t ghactions; then 
+          echo "Runner is already Running" 
+        else 
+          tmux kill-session -t ghactions;
+          tmux new-session -d -s ghactions 
+          tmux send-keys -t ghactions './actions-runner/run.sh' Enter 
+          echo "Runner Started"
+        fi "
+  test:
+    timeout-minutes: 720      
+    name: Build using foss.crave.io
+    needs: run-devspace-and-tmux    
+    runs-on: self-hosted
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
@@ -113,11 +153,7 @@ jobs:
       run: |
         git config --global user.name "${{ github.actor }}"
         git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
-        if [ -z ${GITHUB_TOKEN} ]; then
-          echo machine github.com login ${GITHUB_TOKEN} password ${GITHUB_TOKEN} >> ${PWD}/.netrc
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # Test Your Personal 'Local Manifests' against The ROM
     - name: Test Local Manifests
       run: |
@@ -149,13 +185,13 @@ jobs:
     - name: Configure the 'crave' environment
       run: |
         if [ "${DCDEVSPACE}" == "1" ]; then
-          echo 'No need to set up crave, we are already running in devspace!'
+        echo 'No need to set up crave, we are already running in devspace!'
         else
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           mv ${PWD}/crave ${HOME}/bin/
           sudo ln -sf /home/${USER}/bin/crave /usr/bin/crave
           envsubst < ${PWD}/crave.conf.sample >> ${PWD}/crave.conf
-          rm -rf ${PWD}/crave.conf.sample
+          rm -rf ${PWD}/crave.conf.sample          
         fi
       env:
         CRAVE_USERNAME: ${{  secrets.CRAVE_USERNAME  }}
@@ -164,6 +200,7 @@ jobs:
       # Initialize the previously choosen 'repo' project.
     - name: Set the 'crave' project
       run: |
+        jq '.projects = []' ~/crave.conf > tmp && mv tmp ~/crave.conf
         case "${{ github.event.inputs.BASE_PROJECT }}" in
           "ArrowOS 13.1")
             repo init -u https://github.com/ArrowOS/android_manifest.git -b arrow-13.1 --depth=1
@@ -178,7 +215,6 @@ jobs:
             repo init -u https://github.com/accupara/los20.git -b lineage-20.0 --git-lfs --depth=1
           ;;
         esac
-      id: pwd
         
       # Create a 'crave' job for building.
     - name: Start compilation through 'crave'
@@ -187,7 +223,6 @@ jobs:
            export CLEAN="clean"
         fi
 
-        crave push ${PWD}/.netrc -d ${HOME}/.netrc
         crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ ${{ github.event.inputs.REMOVALS }} && \
         # Clone local_manifests repository
         ${{ github.event.inputs.BUILD_DIFFERENT_ROM }} ; \
@@ -196,20 +231,21 @@ jobs:
         if [ ! $? == 0 ]; then \
           curl -o .repo/local_manifests ${{ github.event.inputs.LOCAL_MANIFEST }}; \
         fi \
-
+        
         # Sync the repositories
         repo sync -c -j\$(nproc --all) --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync  && \
-
+        
         # Set up build environment
-        export BUILD_USERNAME=zaidan ; \
-        export BUILD_HOSTNAME=authority ; \
+        export BUILD_USERNAME=${{ github.actor }} ; \
+        export BUILD_HOSTNAME=crave ; \
         source build/envsetup.sh && \
 
         # Build the ROM
         lunch ${{ github.event.inputs.PRODUCT_NAME }}-${{ github.event.inputs.BUILD_TYPE }} && \
         make installclean && \
         ${{ github.event.inputs.BUILD_COMMAND }}"
-
+      timeout-minutes: 720  
+      
       # Only reach this wheter the user killed the workflow.
     - name: Execute if the job is cancelled
       if: ${{ cancelled() }}
@@ -236,5 +272,13 @@ jobs:
         tag_name: ${{ github.run_id }}
         body: |
           Target: ${{ github.event.inputs.PRODUCT_NAME }}-${{ github.event.inputs.BUILD_TYPE }}
+      continue-on-error: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Upload to Telegram
+    - name: Upload Using telegram-upload
+      run: |
+        telegram-upload ${{ github.event.inputs.DEVICE_NAME }}/recovery.img ${{ github.event.inputs.DEVICE_NAME }}/boot.img ${{ github.event.inputs.DEVICE_NAME }}/vendor_boot.img ${{ github.event.inputs.DEVICE_NAME }}/vendor.img ${{ github.event.inputs.DEVICE_NAME }}/system.img ${{ github.event.inputs.DEVICE_NAME }}/*.zip
+      continue-on-error: true
+      
