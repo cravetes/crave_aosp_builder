@@ -8,23 +8,61 @@ foss.crave.io account
 - Fork this repo
 - Go to (repo) Settings -> Security -> Secrets and Variables -> Actions
 - Copy your username and authentication token from crave.conf
-  ![image](https://github.com/sounddrill31/crave_aosp_builder/assets/84176052/147255e1-39de-4e0a-a48e-fce81faf3162)
+![Repository Secrets](assets/runners.png)
+
 - Create a Repository Secret called CRAVE_USERNAME, with username from crave.conf
 - Create a Repository Secret called CRAVE_TOKEN, with authentication token from crave.conf
 - Go to Settings -> Code and Automation -> Actions -> General
 - Set workflow Permissions to "Read and Write Permissions" and save.
-- Edit .github/workflows/main.yml to change build hostname, build username, git username and git email to your liking
+- Now you are ready to build! Go to "Crave Builder" workflow and start building
+## Selfhosted Runners:
+These runners sit in crave devspace CLI or your personal server and run the workflow on there. Use this if you need to bypass the 6 hours timeout limit.
 
 ## Extra Setup For Selfhosted runner:
 - Follow the above steps
 - On the top menu bar of the repository, click on Actions
 - Self-Hosted Runner -> New Runner
-![image](https://github.com/sounddrill31/crave_aosp_builder/assets/84176052/31cdc938-c421-498b-a61b-6b79992ce1ba)
-- Enter Devspace
-    https://opendroid.pugzarecute.com/wiki/Crave_Devspace#How_to_Prepare_Environment
-- Follow the instructions given by github to set up your runner
-- Do not run ./run.sh, instead, start your build through workflow dispatch
+![Self Hosted Runners](assets/runners.png)
+- Scroll down and copy the Runner Token(avoid closing this tab till the process is done)
+![Finding Runner Token](assets/token-1.png)
 
+- Go back to Actions, select "Setup Selfhosted Runner"
+- Run Workflow and enter your Runner token.
+Ensure you have no random spaces before or after
+![Using Runner token](assets/token-2.png)
+
+- Start the workflow
+- After this is done, you are ready to build! Go to the "Crave Builder(self-hosted)" workflow and start building 
+
+## Required Secrets
+### CRAVE_USERNAME (Required)
+This is the email you signed up to crave with 
+
+example: 
+```
+person@example.com
+```
+### CRAVE_TOKEN (Required)
+This is the Authorization part of the crave.conf. It should not contain `:`, spaces, or `,`
+
+![CRAVE_TOKEN](assets/cravetoken.png)
+### CUSTOM_YAML (Optional)
+If this exists, the crave.yaml will be overridden while running the workflow
+
+example:
+```
+CipherOS:
+  ignoreClientHostname: true
+Arrow OS:
+  ignoreClientHostname: true
+DerpFest-aosp:
+  ignoreClientHostname: true
+LOS 20:
+  ignoreClientHostname: true
+LOS 21:
+  ignoreClientHostname: true
+```
+For more info, read the documentation [here](https://foss.crave.io/docs/crave-usage/#location-of-the-craveyaml-file)
 ## Inputs Explanation
 ### Base Project
     - These are the projects everyone can build, with a foss.crave.io account
@@ -32,9 +70,11 @@ foss.crave.io account
 ### Repo init Command
     - This is only for when you are initializing another ROM. When doing this, ensure you are initializing on top of closest cousin base project
     - Don't initialize android 14 on top of android 13 projects
+    - If you just type 'skip', it will skip the compilation. This is useful for uploading and debugging
 ### Removals
     - When we resync another ROM on top, we are bound to get "cannot checkout" errors. To fix this, we add that folder to the Removals tab
     - Add a space after .repo/local_manifests and add these folders. Don't change if you don't need to
+    - Almost defunct now, since /opt/crave/resync.sh script on crave handles everything for us
 ### Local Manifest
     - Here you enter the git repo and branch for your local manifests, containing device specific repositories. These will be cloned to .repo/local_manifests
 ### Device Details
@@ -50,12 +90,12 @@ foss.crave.io account
 
 - eng:  Development configuration with faster build time; most suited for day-to-day development
 ### Clean Build
-  - Uses fresh Base Project sources without any of our changes(use only for testing/debugging)
+  - Uses fresh Base Project sources without any of your changes(use only for testing/debugging)
 
 ## Known Issues
   - You Tell Me :)
 ## Extra Info
-  - For scheduled builds, it's better to remove the workflow dispatch stuff.
+  - For scheduled builds, it's better to remove the workflow dispatch stuff, check [lineage_builder](https://github.com/a57y17lte-dev/lineage_builder) for reference.
   - This Repo is a spiritual successor to azwhikaru's Action-TWRP-Builder
 ## Credits!
   - [AntoninoScordino](https://github.com/AntoninoScordino) for the recent rewrite

@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-name: Start job for building OrangeFox through Crave.
+name: TWRP Builder(Legacy)
 on:
   workflow_dispatch:
     # Various inputs to simplify usage of workflow.
@@ -18,9 +18,9 @@ on:
         options:
           - 'TWRP 12.1'
       BUILD_DIFFERENT_ROM:
-        description: "orangefox_sync.sh command"
+        description: "Command to initialize a different 'repo' project:"
         required: false
-        default: "bash ~/OrangeFox_sync/orangefox_sync.sh --branch 12.1 --path /tmp/src/android"
+        default: "echo 'Build Starting!'"
       REMOVALS:
         description: "Folders to be removed before syncing:"
         required: false
@@ -43,7 +43,7 @@ on:
       BUILD_COMMAND:
         description: 'Command to be used for compiling:'
         required: true
-        default: 'mka adbd recoveryimage'
+        default: 'mka recoveryimage'
       BUILD_TYPE:
         description: 'Type of build:'
         required: true
@@ -70,9 +70,17 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-      # Clean the workflow before initialization.
-    - name: Cleanup
-      run: rm -rf ${PWD}/*
+      # Create a project folder
+    - name: Create Project Folders
+      run: |
+        mkdir -p devspace
+        sudo mkdir -p /crave-devspaces
+        sudo ln -sf ${pwd}/devspace /crave-devspaces
+        sudo chmod 777 /crave-devspaces
+        export PROJECTFOLDER="/crave-devspaces/TWRP"
+        mkdir -p $PROJECTFOLDER
+        echo "PROJECTFOLDER=$PROJECTFOLDER" >> "$GITHUB_ENV"
+        echo "OLDDIR=$(pwd)" >> "$GITHUB_ENV"
 
       # Check-out in order to access the repository's files.
     - name: Check-out to repository
@@ -99,6 +107,43 @@ jobs:
       run: |
         git config --global user.name "${{ github.actor }}"
         git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+      
+      # Test Your Personal 'Local Manifests' against The ROM
+    - name: Test Local Manifests
+      run: |
+            cd $PROJECTFOLDER
+            rm -rf tester
+            mkdir tester
+            cd tester 
+            if [ "${{ github.event.inputs.BUILD_DIFFERENT_ROM }}" == "echo 'Build Starting!'" ]; then
+              case "${{ github.event.inputs.BASE_PROJECT }}" in
+                  "TWRP 12.1")
+                    repo init -u https://github.com/ArrowOS/android_manifest.git -b arrow-13.1 --depth=1
+                  ;;
+              esac
+             else
+                      ${{ github.event.inputs.BUILD_DIFFERENT_ROM }}
+                      
+              fi
+              git clone ${{ github.event.inputs.LOCAL_MANIFEST }} --depth 1 -b ${{ github.event.inputs.LOCAL_MANIFEST_BRANCH }} .repo/local_manifests && \
+              timeout 1m repo sync --force-sync || { exit_code=$?; [ $exit_code -eq 124 ] || (echo "Error: Process failed with exit code $exit_code"; exit $exit_code); }
+              rm -rf .repo
+      timeout-minutes: 10
+
+      # Initialize the previously choosen 'repo' project.
+    - name: Set the 'crave' project
+      run: |
+        cd $PROJECTFOLDER
+        case "${{ github.event.inputs.BASE_PROJECT }}" in
+          "TWRP 12.1")
+            repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
+        esac
+        if [ "${{ github.event.inputs.BUILD_DIFFERENT_ROM }}" == "echo 'Build Starting!'" ]; then
+          echo "Building ${{ github.event.inputs.BASE_PROJECT }}"
+        else
+          export BUILD_DIFFERENT_ROM="${{ github.event.inputs.BUILD_DIFFERENT_ROM }}"
+        fi
+        echo "BUILD_DIFFERENT_ROM=$BUILD_DIFFERENT_ROM" >> "$GITHUB_ENV"
 
       # Download and configure 'crave'.
     - name: Configure the 'crave' environment
@@ -110,54 +155,47 @@ jobs:
           mv ${PWD}/crave ${HOME}/bin/
           sudo ln -sf /home/${USER}/bin/crave /usr/bin/crave
           envsubst < ${PWD}/crave.conf.sample >> ${PWD}/crave.conf
-          rm -rf ${PWD}/crave.conf.sample          
+          rm -rf ${PWD}/crave.conf.sample  
+          cp crave.conf $PROJECTFOLDER        
+        fi
+        if [[ -z "${{ secrets.CUSTOM_YAML }}" ]]; then
+          cp crave.yaml.twrp $PROJECTFOLDER/.repo/manifests
+          echo "No Custom Configuration Found, Using Template!"
+        else
+          touch $PROJECTFOLDER/.repo/manifests/crave.yaml || true
+          echo "${{ secrets.CUSTOM_YAML }}" > $PROJECTFOLDER/.repo/manifests/crave.yaml
+          echo "Custom Configuration Found!"
         fi
       env:
         CRAVE_USERNAME: ${{  secrets.CRAVE_USERNAME  }}
         CRAVE_TOKEN: ${{  secrets.CRAVE_TOKEN  }}
-
-      # Initialize the previously choosen 'repo' project.
-    - name: Set the 'crave' project
-      run: |
-            repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git -b twrp-12.1
-      id: pwd
         
       # Create a 'crave' job for building.
     - name: Start compilation through 'crave'
       run: |
+        cd $PROJECTFOLDER
         if [ "${{ github.event.inputs.CLEAN_BUILD }}" == "yes" ]; then
            export CLEAN="clean"
         fi
 
-        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ scripts ~/OrangeFox_sync ${{ github.event.inputs.REMOVALS }} && \
-
+        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ ${{ github.event.inputs.REMOVALS }} && \
         # Clone local_manifests repository
+        $BUILD_DIFFERENT_ROM ; \
+
         git clone ${{ github.event.inputs.LOCAL_MANIFEST }} --depth 1 -b ${{ github.event.inputs.LOCAL_MANIFEST_BRANCH }} .repo/local_manifests && \
 
         if [ ! $? == 0 ]; then \
           curl -o .repo/local_manifests ${{ github.event.inputs.LOCAL_MANIFEST }}; \
         fi \
-
+        
         # Sync the repositories
-        repo sync -c -j\$(nproc --all) --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync  && \
-        #Orangefox Specific Commands
-        sudo apt install git aria2 -y; \
-        git clone https://gitlab.com/OrangeFox/misc/scripts; \
-        sudo bash scripts/setup/android_build_env.sh; \
-        sudo bash scripts/setup/install_android_sdk.sh; \
-
-        #Sync OrangeFox
-        mkdir ~/OrangeFox_sync; \
-        git clone https://gitlab.com/OrangeFox/sync.git ~/OrangeFox_sync # (or, using ssh, "git clone git@gitlab.com:OrangeFox/sync.git"); \
-        ${{ github.event.inputs.BUILD_DIFFERENT_ROM }} ; \
+        /opt/crave/resync.sh  && \
         
         # Set up build environment
         export BUILD_USERNAME=${{ github.actor }} ; \
         export BUILD_HOSTNAME=crave ; \
         source build/envsetup.sh && \
         export ALLOW_MISSING_DEPENDENCIES=true; \
-        export FOX_BUILD_DEVICE=${{ github.event.inputs.DEVICE_NAME }}; \
-        export LC_ALL="C"; \
 
         # Build the ROM
         lunch ${{ github.event.inputs.PRODUCT_NAME }}-${{ github.event.inputs.BUILD_TYPE }} && \
@@ -167,26 +205,14 @@ jobs:
       # Only reach this wheter the user killed the workflow.
     - name: Execute if the job is cancelled
       if: ${{ cancelled() }}
-      run: crave stop --all
-
-      # Pull '.zip's and '.img's from 'crave'.
-    - name: Retrive build artifact(s)
       run: |
-        crave pull out/target/product/*/*.img
-        crave pull out/target/product/*/*.zip
+        cd $PROJECTFOLDER
+        crave stop --all
 
-      # Directly upload to releases.
-    - name: Upload to repository's releases page
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          ${{ github.event.inputs.DEVICE_NAME }}/recovery.img
-          ${{ github.event.inputs.DEVICE_NAME }}/boot.img
-          ${{ github.event.inputs.DEVICE_NAME }}/vendor_boot.img
-          ${{ github.event.inputs.DEVICE_NAME }}/*.zip
-        name: Orangefox-${{ github.event.inputs.PRODUCT_NAME }}-${{ github.run_id }}
-        tag_name: ${{ github.run_id }}
-        body: |
-          Target: ${{ github.event.inputs.PRODUCT_NAME }}-${{ github.event.inputs.BUILD_TYPE }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Upload '.zip's and '.img's directly from 'crave' ssh.
+    - name: Upload build artifact(s)
+      run: |
+        cd $PROJECTFOLDER
+        echo "${{ secrets.GITHUB_TOKEN }}" > token.txt
+        crave push token.txt -d $(crave ssh -- pwd | grep -v Select | sed -s 's/\r//g')/
+        crave ssh -- "bash /opt/crave/github-actions/upload.sh '${{ github.run_id }}' '${{ github.event.inputs.DEVICE_NAME }}'  '${{ github.repository }}' '${{ github.event.inputs.PRODUCT_NAME }}-${{ github.run_id }}'"
