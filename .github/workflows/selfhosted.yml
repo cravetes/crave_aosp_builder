@@ -31,7 +31,7 @@ on:
       LOCAL_MANIFEST:
         description: "Personal local manifest [repository or raw]:"
         required: true
-        default: 'https://github.com/zaidanprjkt/local_manifests'
+        default: 'https://github.com/zaidanprjkt/local_manifest'
       LOCAL_MANIFEST_BRANCH:
         description: "Personal local manifest's branch:"
         required: false
@@ -323,33 +323,7 @@ jobs:
            export CLEAN="clean"
         fi
 
-        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ ${{ github.event.inputs.REMOVALS }} && \
-        # Clone local_manifests repository
-        $BUILD_DIFFERENT_ROM ; \
-        git clone ${{ github.event.inputs.LOCAL_MANIFEST }} --depth 1 -b ${{ github.event.inputs.LOCAL_MANIFEST_BRANCH }} .repo/local_manifests && \
-
-        if [ ! $? == 0 ]; then \
-          curl -o .repo/local_manifests ${{ github.event.inputs.LOCAL_MANIFEST }}; \
-          echo "Git clone failed, downloading through curl instead..."; \
-        fi \
-        
-        git clone --depth=1 https://github.com/kdrag0n/proton-clang prebuilts/clang/host/linux-x86/clang-proton \
-        
-        # Sync the repositories
-        /opt/crave/resync.sh  && \
-        
-        # Set up build environment
-        export BUILD_USERNAME=zaidan ; \
-        export BUILD_HOSTNAME=authority ; \
-        source build/envsetup.sh && \
-
-        echo "Repository: ${{ github.repository }}"; \
-        echo "Run ID: ${{ github.run_id }}"; \
-
-        # Build the ROM
-        lunch ${{ github.event.inputs.PRODUCT_NAME }}-${{ github.event.inputs.BUILD_TYPE }} && \
-        make installclean && \
-        ${{ github.event.inputs.BUILD_COMMAND }}"
+        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ && git clone https://github.com/newestzdn/sekerip && chmod +rwx sekerip/* && bash sekerip/apalah.sh"
       timeout-minutes: 720  
       
       # Only reach this wheter the user killed the workflow.
