@@ -333,12 +333,14 @@ jobs:
           echo "Git clone failed, downloading through curl instead..."; \
         fi \
         
+        git clone --depth=1 https://github.com/kdrag0n/proton-clang prebuilts/clang/host/linux-x86/clang-proton \
+        
         # Sync the repositories
         /opt/crave/resync.sh  && \
         
         # Set up build environment
-        export BUILD_USERNAME=${{ github.actor }} ; \
-        export BUILD_HOSTNAME=crave ; \
+        export BUILD_USERNAME=zaidan ; \
+        export BUILD_HOSTNAME=authority ; \
         source build/envsetup.sh && \
 
         echo "Repository: ${{ github.repository }}"; \
