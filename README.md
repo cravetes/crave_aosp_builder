@@ -18,10 +18,13 @@ foss.crave.io account
 - Fork this repo
 - Go to (repo) Settings -> Security -> Secrets and Variables -> Actions
 - Copy your username and authentication token from crave.conf
-![Repository Secrets](assets/runners.png)
+![Repository Secrets](assets/cravetoken.png)
 
 - Create a Repository Secret called CRAVE_USERNAME, with username from crave.conf
 - Create a Repository Secret called CRAVE_TOKEN, with authentication token from crave.conf
+![Repository Secrets](assets/secrets.png)
+![Repository Secrets](assets/secrets2.png)
+
 - Go to Settings -> Code and Automation -> Actions -> General
 - Set workflow Permissions to "Read and Write Permissions" and save.
 - Now you are ready to build! Go to "Crave Builder" workflow and start building
