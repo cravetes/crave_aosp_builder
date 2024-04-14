@@ -12,6 +12,13 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
+
+    # Generate 'git' credential in base of the workflow's author.
+    - name: Set-up 'git' credential(s)
+      run: |
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
     - name: Cleanup
       run: rm -rf * # This cleans github actions workspace
 
