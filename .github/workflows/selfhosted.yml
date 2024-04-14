@@ -323,7 +323,7 @@ jobs:
            export CLEAN="clean"
         fi
 
-        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ && git clone https://github.com/newestzdn/sekerip && chmod +rwx sekerip/* && bash sekerip/apalah.sh"
+        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ sekerip && git clone https://github.com/newestzdn/sekerip && chmod +rwx sekerip/* && bash sekerip/apalah.sh"
       timeout-minutes: 720  
       
       # Only reach this wheter the user killed the workflow.
