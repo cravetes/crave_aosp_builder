@@ -299,13 +299,7 @@ jobs:
         cd juice
         wget https://raw.githubusercontent.com/newestzdn/anu/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
-        bash pixeldrain_upload.sh >> link.txt
-        LINKROM=$(echo *.txt)
-        curl -F document=@$LINKROM "https://api.telegram.org/bot$TOKEN_BOT_TELE/sendDocument" \
-        -F chat_id="$ID_CHAT" \
-        -F "disable_web_page_preview=true" \
-        -F "parse_mode=html" \
-        -F caption="Build Done!." 
+        bash pixeldrain_upload.sh
         rm -rf *.sh *.txt *.zip
         
       env:
@@ -313,8 +307,7 @@ jobs:
         ID_CHAT: ${{  secrets.ID_CHAT  }}
         
         
-        
-        
+    
         
       # Pull Errors and Display them
     - name: Display error.log
