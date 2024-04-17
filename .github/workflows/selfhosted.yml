@@ -295,11 +295,26 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
-        crave pull out/target/product/*/Havoc-OS-*.zip
+        crave pull out/target/product/*/crDroidAndroid-14.0-*.zip
         cd juice
         wget https://raw.githubusercontent.com/newestzdn/anu/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
-        bash pixeldrain_upload.sh
+        bash pixeldrain_upload.sh >> link.txt
+        LINKROM=$(echo *.txt)
+        curl -F document=@$LINKROM "https://api.telegram.org/bot$TOKEN_BOT_TELE/sendDocument" \
+        -F chat_id="$ID_CHAT" \
+        -F "disable_web_page_preview=true" \
+        -F "parse_mode=html" \
+        -F caption="Build Done!." 
+        rm -rf *.sh *.txt *.zip
+        
+      env:
+        TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
+        ID_CHAT: ${{  secrets.ID_CHAT  }}
+        
+        
+        
+        
         
       # Pull Errors and Display them
     - name: Display error.log
