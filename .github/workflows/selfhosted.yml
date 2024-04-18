@@ -108,7 +108,10 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
     - name: Cleanup
-      run: rm -rf * # This cleans github actions workspace
+      run: | 
+           rm -rf * # This cleans github actions workspace
+           unset PROJECTFOLDER
+           unset DEVICE_CODENAME
 
       # Create a project folder
     - name: Create Project Folders
@@ -178,7 +181,7 @@ jobs:
       run: |
         cd $PROJECTFOLDER
         crave pull out/target/product/*/*.zip
-        cd 
+        cd $DEVICE_CODENAME
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh
@@ -187,6 +190,7 @@ jobs:
       env:
         TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
         ID_CHAT: ${{  secrets.ID_CHAT  }}
+        DEVICE_CODENAME: ${{ github.event.inputs.DEVICE_CODENAME }}
         
       # Pull Errors and Display them
     - name: Display error.log
