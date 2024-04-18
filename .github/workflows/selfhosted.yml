@@ -117,7 +117,9 @@ jobs:
     - name: Create Project Folders
       run: |
         export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
-        mkdir $PROJECTFOLDER
+        if [ ! -d "$FOLDERNAME" ]; then
+        mkdir -p "$FOLDERNAME"
+        fi
         
       env:
           FOLDERNAME: ${{ github.event.inputs.FOLDER_NAME }}
