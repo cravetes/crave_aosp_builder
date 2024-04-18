@@ -13,7 +13,7 @@ on:
       BASE_PROJECT:
         description: 'Choose a base project:'
         required: true
-        default: 'LineageOS 21.0'
+        default: 'ArrowOS 13.1'
         type: choice
         options:
           - 'LineageOS 20.0'
@@ -22,11 +22,11 @@ on:
       FOLDER_NAME:
         description: "Folder Name:"
         required: true
-        default: 'crdroid'
+        default: 'xd'
       DEVICE_CODENAME:
         description: "Your device codename: (ex. topaz, tissot)"
         required: true
-        default: 'chime'
+        default: 'juice'
       
 jobs:
   run-devspace-and-tmux:
@@ -175,7 +175,7 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
-        crave pull out/target/product/*/*.zip
+        crave pull out/target/product/*/xdCLO_*.zip
         cd $DEVICE_CODENAME
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
@@ -197,11 +197,3 @@ jobs:
         crave pull out/error.log
         echo "Displaying out/error.log"
         cat out/error.log
-
-      # Upload to Telegram
-    - name: Upload Using telegram-upload
-      run: |
-        cd $PROJECTFOLDER
-        crave push ~/.config/telegram-upload.json ~/.config/telegram-upload.session -d /home/admin/.config
-        crave ssh -- "sudo pip3 install -U telegram-upload; telegram-upload out/target/product/*/*.zip out/target/product/*/*.img"
-      continue-on-error: true
