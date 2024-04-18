@@ -295,12 +295,12 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
-        crave pull out/target/product/*/crDroidAndroid-14.0-*.zip
+        crave pull out/target/product/*/*.zip
         cd juice
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh
-        rm -rf *.sh *.txt *.zip
+        rm -rf *.sh *.txt *.zip *.img
         
       env:
         TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
