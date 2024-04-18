@@ -116,9 +116,10 @@ jobs:
       # Create a project folder
     - name: Create Project Folders
       run: |
+        cd /crave-devspaces/
         export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
         if [ ! -d "$FOLDERNAME" ]; then
-        mkdir -p "$FOLDERNAME"
+        mkdir "$FOLDERNAME"
         fi
         
       env:
