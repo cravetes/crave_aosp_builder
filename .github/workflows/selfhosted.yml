@@ -125,8 +125,8 @@ jobs:
           FOLDERNAME: ${{ github.event.inputs.FOLDER_NAME }}
         
       # Check-out in order to access the repository's files.
-    - name: Check-out to repository
-      uses: actions/checkout@v4
+    # - name: Check-out to repository
+      #uses: actions/checkout@v4
       
       # Generate 'git' credential in base of the workflow's author.
     - name: Set-up 'git' credential(s)
@@ -158,12 +158,7 @@ jobs:
       if: ${{ github.event.inputs.BUILD_DIFFERENT_ROM != 'skip' }}
       run: |
         cd $PROJECTFOLDER
-        
-        jq '.projects = []' ~/crave.conf > tmp && mv tmp ~/crave.conf
-        if [ "${{ github.event.inputs.CLEAN_BUILD }}" == "yes" ]; then
-           export CLEAN="clean"
-        fi
-
+    
         crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ sekerip && git clone -b crdroid https://github.com/newestzdn/sekerip && chmod +rwx sekerip/* && bash sekerip/apalah.sh"
       timeout-minutes: 720  
       
