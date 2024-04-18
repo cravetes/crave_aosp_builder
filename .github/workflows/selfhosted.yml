@@ -175,7 +175,7 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
-        crave pull out/target/product/*/*.zip
+        crave pull out/target/product/*/lineage-21.0-*.zip
         cd $DEVICE_CODENAME
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
