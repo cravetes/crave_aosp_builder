@@ -40,12 +40,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y tmux
-        export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
         
-      env:
-          FOLDERNAME: ${{ github.event.inputs.BASE_PROJECT }}
-        
-
       # Download and configure 'crave'.
     - name: Configure the 'crave' environment
       run: |
@@ -118,7 +113,11 @@ jobs:
       # Create a project folder
     - name: Create Project Folders
       run: |
+        export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
         mkdir $PROJECTFOLDER
+        
+      env:
+          FOLDERNAME: ${{ github.event.inputs.BASE_PROJECT }}
         
       # Check-out in order to access the repository's files.
     - name: Check-out to repository
@@ -188,9 +187,6 @@ jobs:
       env:
         TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
         ID_CHAT: ${{  secrets.ID_CHAT  }}
-        
-        
-    
         
       # Pull Errors and Display them
     - name: Display error.log
