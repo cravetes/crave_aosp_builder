@@ -117,7 +117,7 @@ jobs:
         mkdir $PROJECTFOLDER
         
       env:
-          FOLDERNAME: ${{ github.event.inputs.BASE_PROJECT }}
+          FOLDERNAME: ${{ github.event.inputs.FOLDER_NAME }}
         
       # Check-out in order to access the repository's files.
     - name: Check-out to repository
@@ -178,7 +178,7 @@ jobs:
       run: |
         cd $PROJECTFOLDER
         crave pull out/target/product/*/*.zip
-        cd chime
+        cd 
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh
