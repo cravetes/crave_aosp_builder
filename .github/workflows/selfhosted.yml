@@ -22,7 +22,7 @@ on:
       FOLDER_NAME:
         description: "Folder Name:"
         required: true
-        default: 'xd'
+        default: '11-4'
       DEVICE_CODENAME:
         description: "Your device codename: (ex. topaz, tissot)"
         required: true
@@ -109,7 +109,7 @@ jobs:
     steps:
     - name: Cleanup
       run: | 
-           rm -rf * # This cleans github actions workspace
+           # This cleans github actions workspace
            unset PROJECTFOLDER
            unset DEVICE_CODENAME
 
