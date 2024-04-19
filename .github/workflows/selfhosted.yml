@@ -179,7 +179,7 @@ jobs:
         cd $DEVICE_CODENAME
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
-        bash pixeldrain_upload.sh
+        bash pixeldrain_upload.sh >/dev/null 2>&1
         rm -rf *.sh *.txt *.zip *.img
         
       env:
