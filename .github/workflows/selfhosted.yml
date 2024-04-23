@@ -180,7 +180,10 @@ jobs:
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh >/dev/null 2>&1
-        rm -rf *.sh *.txt *.zip *.img
+        rm -rf *.txt *.zip *.img
+        cd citrus
+        bash pixeldrain_upload.sh >/dev/null 2>&1
+        
         
       env:
         TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
