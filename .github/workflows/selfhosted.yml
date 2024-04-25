@@ -27,7 +27,7 @@ on:
       DEVICE_CODENAME:
         description: "Your device codename: (ex. topaz, tissot)"
         required: true
-        default: 'lime
+        default: 'lime'
       
 jobs:
   run-devspace-and-tmux:
