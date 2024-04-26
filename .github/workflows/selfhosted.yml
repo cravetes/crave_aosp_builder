@@ -14,7 +14,7 @@ on:
       BASE_PROJECT:
         description: 'Choose a base project:'
         required: true
-        default: 'ArrowOS 13.1'
+        default: 'LineageOS 21.0'
         type: choice
         options:
           - 'LineageOS 20.0'
@@ -23,7 +23,7 @@ on:
       FOLDER_NAME:
         description: "Folder Name:"
         required: true
-        default: '13-p'
+        default: 'proton'
       DEVICE_CODENAME:
         description: "Your device codename: (ex. topaz, tissot)"
         required: true
@@ -118,6 +118,7 @@ jobs:
     - name: Create Project Folders
       run: |
         cd /crave-devspaces/
+        rm -rf 13-p
         export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
         if [ ! -d "$FOLDERNAME" ]; then
         mkdir "$FOLDERNAME"
@@ -198,11 +199,3 @@ jobs:
         crave pull out/error.log
         echo "Displaying out/error.log"
         cat out/error.log
-
-      # Upload to Telegram
-    - name: Upload Using telegram-upload
-      run: |
-        cd $PROJECTFOLDER
-        crave push ~/.config/telegram-upload.json ~/.config/telegram-upload.session -d /home/admin/.config
-        crave ssh -- "sudo pip3 install -U telegram-upload; telegram-upload out/target/product/*/*.zip out/target/product/*/*.img"
-      continue-on-error: true
