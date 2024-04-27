@@ -22,11 +22,11 @@ on:
       FOLDER_NAME:
         description: "Folder Name:"
         required: true
-        default: '11-4'
+        default: 'proton'
       DEVICE_CODENAME:
         description: "Your device codename: (ex. topaz, tissot)"
         required: true
-        default: 'juice'
+        default: 'lime'
       
 jobs:
   run-devspace-and-tmux:
@@ -147,7 +147,7 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
-        crave pull out/target/product/*/xdCLO_*.zip
+        crave pull out/target/product/*/ProtonPlus-*.zip
         cd $DEVICE_CODENAME
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
