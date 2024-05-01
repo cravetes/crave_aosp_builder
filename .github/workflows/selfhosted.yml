@@ -175,7 +175,7 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
-        crave pull out/target/product/*/RisingOS-2.1-*.zip
+        crave pull out/target/product/*/RisingOS-2.2-*.zip
         cd $DEVICE_CODENAME
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
@@ -183,6 +183,8 @@ jobs:
         rm -rf *.txt *.zip *.img
         cd ..
         cd citrus
+        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
+        chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh >/dev/null 2>&1
         
         
