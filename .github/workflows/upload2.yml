@@ -147,8 +147,8 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
-        rm -rf *
-        crave pull out/target/product/*/RisingOS-2.2-*.zip
+        #m -rf *
+        #crave pull out/target/product/*/RisingOS-2.2-*.zip
         cd $DEVICE_CODENAME
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/devupload_upload.sh
         chmod +rwx devupload_upload.sh
