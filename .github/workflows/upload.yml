@@ -22,7 +22,7 @@ on:
       FOLDER_NAME:
         description: "Folder Name:"
         required: true
-        default: 'proton'
+        default: 'rising'
       DEVICE_CODENAME:
         description: "Your device codename: (ex. topaz, tissot)"
         required: true
@@ -147,12 +147,18 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
+        rm -rf *
         crave pull out/target/product/*/RisingOS-2.2-*.zip
         cd $DEVICE_CODENAME
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh >/dev/null 2>&1
         rm -rf *.sh *.txt *.zip *.img
+        cd ..
+        cd citrus
+        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
+        chmod +rwx pixeldrain_upload.sh
+        bash pixeldrain_upload.sh >/dev/null 2>&1
         
       env:
         TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
