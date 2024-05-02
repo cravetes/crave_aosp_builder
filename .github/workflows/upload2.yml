@@ -13,7 +13,7 @@ on:
       BASE_PROJECT:
         description: 'Choose a base project:'
         required: true
-        default: 'LineageOS 21.0'
+        default: 'ArrowOS 13.1'
         type: choice
         options:
           - 'LineageOS 20.0'
@@ -147,8 +147,8 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
+        rm -rf *
         crave pull out/target/product/*/RisingOS-2.2-*.zip
-        rm -rf *.sh
         cd $DEVICE_CODENAME
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/devupload_upload.sh
         chmod +rwx devupload_upload.sh
