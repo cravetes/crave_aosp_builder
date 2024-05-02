@@ -156,6 +156,7 @@ jobs:
         rm -rf *.sh *.txt *.zip *.img
         cd ..
         cd citrus
+        rm -rf *.sh
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh >/dev/null 2>&1
@@ -163,5 +164,6 @@ jobs:
       env:
         TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
         ID_CHAT: ${{  secrets.ID_CHAT  }}
+        pixeltoken: ${{  secrets.pixeltoken  }}
         DEVICE_CODENAME: ${{ github.event.inputs.DEVICE_CODENAME }}
         
