@@ -1,0 +1,169 @@
+#
+# Copyright (C) 2024 Antonino Scordino
+# Copyright (C) 2024 Souhrud Reddy
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+name: Upload to Devuploads
+on:
+  workflow_dispatch:
+    # Various inputs to simplify usage of workflow.
+    inputs:
+      BASE_PROJECT:
+        description: 'Choose a base project:'
+        required: true
+        default: 'ArrowOS 13.1'
+        type: choice
+        options:
+          - 'LineageOS 20.0'
+          - 'LineageOS 21.0'
+          - 'ArrowOS 13.1'
+      FOLDER_NAME:
+        description: "Folder Name:"
+        required: true
+        default: 'proton'
+      DEVICE_CODENAME:
+        description: "Your device codename: (ex. topaz, tissot)"
+        required: true
+        default: 'lime'
+      
+jobs:
+  run-devspace-and-tmux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tmux
+        
+      # Download and configure 'crave'.
+    - name: Configure the 'crave' environment
+      run: |
+        if [ "${DCDEVSPACE}" == "1" ]; then
+        echo 'No need to set up crave, we are already running in devspace!'
+        else
+          mkdir ${HOME}/bin/
+          curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
+          mv ${PWD}/crave ${HOME}/bin/
+          sudo ln -sf /home/${USER}/bin/crave /usr/bin/crave
+          envsubst < ${PWD}/crave.conf.sample >> ${PWD}/crave.conf
+          rm -rf ${PWD}/crave.conf.sample          
+        fi
+      env:
+        CRAVE_USERNAME: ${{  secrets.CRAVE_USERNAME  }}
+        CRAVE_TOKEN: ${{  secrets.CRAVE_TOKEN  }}
+
+    - name: Run crave devspace
+      run: |
+        crave devspace -- "if tmux has-session -t ghactions; then 
+          echo "Runner is already Running" 
+        else 
+          tmux kill-session -t ghactions;
+          tmux new-session -d -s ghactions 
+          tmux send-keys -t ghactions './actions-runner/run.sh' Enter 
+          echo "Runner Started"
+        fi "
+
+  test:
+    name: Test Local Manifests
+    runs-on: ubuntu-latest
+    steps:
+      # Download and configure 'repo'.
+    - name: Configure the 'repo' environment
+      run: |
+        # Check if repo is already installed
+        if ! command -v repo >/dev/null 2>&1; then
+          echo "Repo not found. Installing now..."
+          # Create bin directory if it doesn't exist
+          mkdir -p ~/bin
+          # Download repo script
+          curl https://storage.googleapis.com/git-repo-downloads/repo >> ~/bin/repo
+          # Make repo script executable
+          chmod a+x ~/bin/repo
+          # Create symbolic link to /usr/bin/repo
+          sudo ln -sf "/home/$(whoami)/bin/repo" "/usr/bin/repo"
+          echo "Repo installation complete."
+        else
+          echo "Repo already installed."
+        fi
+      continue-on-error: true
+      
+      # Generate 'git' credential in base of the workflow's author.
+    - name: Set-up 'git' credential(s)
+      run: |
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+
+  build:
+    timeout-minutes: 720      
+    name: Build using foss.crave.io
+    needs: test 
+    runs-on: self-hosted
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+    - name: Cleanup
+      run: | 
+           # This cleans github actions workspace
+           unset PROJECTFOLDER
+           unset DEVICE_CODENAME
+
+      # Create a project folder
+    - name: Create Project Folders
+      run: |
+        cd /crave-devspaces/
+        export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
+        if [ ! -d "$FOLDERNAME" ]; then
+        mkdir "$FOLDERNAME"
+        fi
+        echo "PROJECTFOLDER=$PROJECTFOLDER" >> "$GITHUB_ENV"
+    
+      env:
+          FOLDERNAME: ${{ github.event.inputs.FOLDER_NAME }}
+        
+      # Check-out in order to access the repository's files.
+    # - name: Check-out to repository
+      #uses: actions/checkout@v4
+      
+      # Generate 'git' credential in base of the workflow's author.
+    - name: Set-up 'git' credential(s)
+      run: |
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+    
+      # Only reach this wheter the user killed the workflow.
+    - name: Execute if the job is cancelled
+      if: ${{ cancelled() }}
+      run: |
+        cd $PROJECTFOLDER
+        crave stop --all
+
+      # Upload '.zip's and '.img's directly from 'crave' ssh.
+    - name: Upload build artifact(s)
+      run: |
+        cd $PROJECTFOLDER
+        crave pull out/target/product/*/RisingOS-2.2-*.zip
+        rm -rf *.sh
+        cd $DEVICE_CODENAME
+        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/devupload_upload.sh
+        chmod +rwx devupload_upload.sh
+        bash devupload_upload.sh >/dev/null 2>&1
+        rm -rf *.sh *.txt *.img
+        cd ..
+        cd citrus
+        rm -rf *.sh
+        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/devupload_upload.sh
+        chmod +rwx devupload_upload.sh
+        bash devupload_upload.sh >/dev/null 2>&1
+        rm -rf *.sh
+        
+      env:
+        TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
+        ID_CHAT: ${{  secrets.ID_CHAT  }}
+        DEVUPLOAD_TOKEN: ${{  secrets.DEVUPLOAD_TOKEN  }}
+        DEVICE_CODENAME: ${{ github.event.inputs.DEVICE_CODENAME }}
