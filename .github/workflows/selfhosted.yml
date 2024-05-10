@@ -22,7 +22,7 @@ on:
       FOLDER_NAME:
         description: "Folder Name:"
         required: true
-        default: 'rising'
+        default: 'derp'
       DEVICE_CODENAME:
         description: "Your device codename: (ex. topaz, tissot)"
         required: true
@@ -175,7 +175,7 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
-        crave pull out/target/product/*/RisingOS-2.2-*.zip
+        crave pull out/target/product/*/DerpFest-*.zip
         cd $DEVICE_CODENAME
         rm -rf *.sh
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
