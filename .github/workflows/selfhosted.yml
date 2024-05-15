@@ -161,7 +161,7 @@ jobs:
       run: |
         cd $PROJECTFOLDER
     
-        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ sekerip && git clone -b crdroid https://github.com/newestzdn/sekerip && chmod +rwx sekerip/* && bash sekerip/apalah.sh"
+        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ sekerip && git clone -b crdroid https://github.com/newestzdn/sekerip && chmod +rwx sekerip/* && bash sekerip/build2.sh"
       timeout-minutes: 720  
       
       # Only reach this wheter the user killed the workflow.
