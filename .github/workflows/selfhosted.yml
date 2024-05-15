@@ -22,7 +22,7 @@ on:
       FOLDER_NAME:
         description: "Folder Name:"
         required: true
-        default: 'rising'
+        default: 'cherish'
       DEVICE_CODENAME:
         description: "Your device codename: (ex. topaz, tissot)"
         required: true
@@ -161,7 +161,7 @@ jobs:
       run: |
         cd $PROJECTFOLDER
     
-        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ sekerip && git clone -b rising https://github.com/newestzdn/sekerip && chmod +rwx sekerip/* && bash sekerip/build2.sh"
+        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ sekerip && git clone -b cherish https://github.com/newestzdn/sekerip && chmod +rwx sekerip/* && bash sekerip/build2.sh"
       timeout-minutes: 720  
       
       # Only reach this wheter the user killed the workflow.
@@ -175,13 +175,13 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
-        crave pull out/target/product/*/RisingOS-2.2-*.zip
+        crave pull out/target/product/*/Cherish-OS-v5.5-*.zip
         cd $DEVICE_CODENAME
         rm -rf *.sh 
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         rm -rf .img
         wget https://raw.githubusercontent.com/zaidanprjkt/device_xiaomi_juice/a2934e1451bbca5f0c23431dd80faaac0058a84a/prebuilt/boot.img 
-        zip -u RisingOS-2.2-*.zip boot.img
+        zip -u Cherish-OS-v5.5-*.zip boot.img
         chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh >/dev/null 2>&1
         rm -rf *.txt *.zip *.img
@@ -191,7 +191,7 @@ jobs:
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         rm -rf *.img
         wget https://raw.githubusercontent.com/zaidanprjkt/device_xiaomi_juice/a2934e1451bbca5f0c23431dd80faaac0058a84a/prebuilt/boot.img 
-        zip -u RisingOS-2.2-*.zip boot.img
+        zip -u Cherish-OS-v5.5-*.zip boot.img
         chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh >/dev/null 2>&1
         
