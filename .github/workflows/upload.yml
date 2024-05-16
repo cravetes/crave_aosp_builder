@@ -147,16 +147,20 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
+        crave pull out/target/product/*/Cherish-OS-v5.5-*.zip
         cd $DEVICE_CODENAME
+        rm -rf *.sh 
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
+        rm -rf .img
+        wget https://raw.githubusercontent.com/zaidanprjkt/device_xiaomi_juice/a2934e1451bbca5f0c23431dd80faaac0058a84a/prebuilt/boot.img 
+        zip -u Cherish-OS-v5.5-*.zip boot.img
         chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh >/dev/null 2>&1
-        rm -rf *.sh *.txt *.img
-        cd ..
-        cd citrus
-        rm -rf *.sh
-        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
-        chmod +rwx pixeldrain_upload.sh
+        rm -rf *.txt *.zip *.img
+        #cd citrus
+        #rm -rf *.sh
+        #wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
+        #chmod +rwx pixeldrain_upload.sh
         bash pixeldrain_upload.sh >/dev/null 2>&1
         
       env:
