@@ -186,14 +186,14 @@ jobs:
         bash pixeldrain_upload.sh >/dev/null 2>&1
         rm -rf *.txt *.zip *.img
         cd ..
-        cd citrus
-        rm -rf *.sh
-        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
-        rm -rf *.img
-        wget https://raw.githubusercontent.com/zaidanprjkt/device_xiaomi_juice/a2934e1451bbca5f0c23431dd80faaac0058a84a/prebuilt/boot.img 
-        zip -u Cherish-OS-v5.5-*.zip boot.img
-        chmod +rwx pixeldrain_upload.sh
-        bash pixeldrain_upload.sh >/dev/null 2>&1
+        #cd citrus
+        #rm -rf *.sh
+        #wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
+       # rm -rf *.img
+       # wget https://raw.githubusercontent.com/zaidanprjkt/device_xiaomi_juice/a2934e1451bbca5f0c23431dd80faaac0058a84a/prebuilt/boot.img 
+       # zip -u Cherish-OS-v5.5-*.zip boot.img
+      #  chmod +rwx pixeldrain_upload.sh
+      #  bash pixeldrain_upload.sh >/dev/null 2>&1
         
         
       env:
