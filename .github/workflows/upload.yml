@@ -146,9 +146,9 @@ jobs:
       # Upload '.zip's and '.img's directly from 'crave' ssh.
     - name: Upload build artifact(s)
       run: |
-        cd $PROJECTFOLDER
-        rm -rf *
-        crave pull out/target/product/*/RisingOS-2.2-*.zip
+        #cd $PROJECTFOLDER
+        #rm -rf *
+        #crave pull out/target/product/*/RisingOS-2.2-*.zip
         cd $DEVICE_CODENAME
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         chmod +rwx pixeldrain_upload.sh
