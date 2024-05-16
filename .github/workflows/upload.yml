@@ -69,12 +69,7 @@ jobs:
           echo "Runner Started"
         fi "
 
-  test:
-    name: Test Local Manifests
-    runs-on: ubuntu-latest
-    steps:
-      # Download and configure 'repo'.
-    - name: Configure the 'repo' environment
+    - name: Test Local Manifests
       run: |
         # Check if repo is already installed
         if ! command -v repo >/dev/null 2>&1; then
@@ -91,24 +86,10 @@ jobs:
         else
           echo "Repo already installed."
         fi
-      continue-on-error: true
-      
-      # Generate 'git' credential in base of the workflow's author.
-    - name: Set-up 'git' credential(s)
-      run: |
         git config --global user.name "${{ github.actor }}"
         git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
 
-  build:
-    name: Build using foss.crave.io
-    needs: test
-    runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-    steps:
-    - name: Cleanup
-      run: | 
-           # This cleans github actions workspace
+        # This cleans github actions workspace
            unset PROJECTFOLDER
            unset DEVICE_CODENAME
 
@@ -126,8 +107,8 @@ jobs:
           FOLDERNAME: ${{ github.event.inputs.FOLDER_NAME }}
         
       # Check-out in order to access the repository's files.
-    # - name: Check-out to repository
-      #uses: actions/checkout@v4
+    - name: Check-out to repository
+      uses: actions/checkout@v4
       
       # Generate 'git' credential in base of the workflow's author.
     - name: Set-up 'git' credential(s)
