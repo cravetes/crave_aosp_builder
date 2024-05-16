@@ -100,10 +100,8 @@ jobs:
         git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
 
   build:
-    timeout-minutes: 720      
     name: Build using foss.crave.io
-    needs: test 
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
