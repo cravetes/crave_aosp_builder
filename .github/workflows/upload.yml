@@ -84,16 +84,16 @@ jobs:
       env:
           FOLDERNAME: ${{ github.event.inputs.FOLDER_NAME }}
         
+    # Set-up a spearate directory for the device.
+    - name: Cleanup
+      run: |
+        rm -rf *
+        unset PROJECTFOLDER
+        unset DEVICE_CODENAME
 
       # Check-out in order to access the repository's files.
     - name: Check-out to repository
       uses: actions/checkout@v4
-
-      # Set-up a spearate directory for the device.
-    - name: Cleanup
-      run: |
-        unset PROJECTFOLDER
-        unset DEVICE_CODENAME
 
       # Download and configure 'repo'.
     - name: Configure the 'repo' environment
@@ -118,7 +118,6 @@ jobs:
       # Download and configure 'crave'.
     - name: Configure the 'crave' environment
       run: |
-          mkdir ${HOME}/bin/
           curl -s https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh | bash -s --
           mv ${PWD}/crave ${HOME}/bin/
           sudo ln -sf /home/${USER}/bin/crave /usr/bin/crave
