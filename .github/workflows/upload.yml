@@ -123,7 +123,6 @@ jobs:
           sudo ln -sf /home/${USER}/bin/crave /usr/bin/crave
           envsubst < ${PWD}/crave.conf.sample >> ${PWD}/crave.conf
           rm -rf ${PWD}/crave.conf.sample
-          crave -c crave.conf devspace
       env:
         CRAVE_USERNAME: ${{  secrets.CRAVE_USERNAME  }}
         CRAVE_TOKEN: ${{  secrets.CRAVE_TOKEN  }}
@@ -132,6 +131,7 @@ jobs:
       # Upload '.zip's and '.img's directly from 'crave' ssh.
     - name: Upload build artifact(s)
       run: |
+        crave -c crave.conf devspace
         cd /crave-devspaces/
         export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
         if [ ! -d "$FOLDERNAME" ]; then
