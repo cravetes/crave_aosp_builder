@@ -78,7 +78,7 @@ jobs:
         if [ ! -d "$FOLDERNAME" ]; then
         mkdir "$FOLDERNAME"
         fi
-        echo "PROJECTFOLDER=$PROJECTFOLDER" >> "$GITHUB_ENV
+        echo "PROJECTFOLDER=$PROJECTFOLDER" >> "$GITHUB_ENV"
         
     
       env:
