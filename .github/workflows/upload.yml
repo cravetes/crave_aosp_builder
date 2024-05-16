@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-name: Upload to Pixeldrain
+name: Crave Builder
 on:
   workflow_dispatch:
     # Various inputs to simplify usage of workflow.
@@ -19,29 +19,104 @@ on:
           - 'LineageOS 20.0'
           - 'LineageOS 21.0'
           - 'ArrowOS 13.1'
+          - 'DerpFest 13.0'
+          - 'CipherOS 14'
       FOLDER_NAME:
-        description: "Folder Name:"
+        description: "Command to initialize a different 'repo' project:"
         required: true
-        default: 'cherish'
+        default: "cherish"
       DEVICE_CODENAME:
-        description: "Your device codename: (ex. topaz, tissot)"
+        description: "Device's codename:"
         required: true
-        default: 'citrus'
-      
+        default: "lime"
+      ZIP_NAME:
+        description: "Name ROM when full compress:"
+        required: true
+        default: "Cherish-OS-v5.5-*.zip"
+
 jobs:
-  run-devspace-and-tmux:
+  test:
+    name: Build using foss.crave.io
+      # Change this to self-hosted after setting up devspace as github actions runner
     runs-on: ubuntu-latest
-
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4.1.4
-
-    - name: Set up environment
+      # Create a project folder
+    - name: Create Project Folders
       run: |
-        sudo apt-get update
-        sudo apt-get install -y tmux
+        if [ "${DCDEVSPACE}" != "1" ]; then
+          echo "Symlinking devspace folder"
+          mkdir -p devspace
+          sudo mkdir -p /crave-devspaces
+          sudo ln -sf ${pwd}/devspace /crave-devspaces
+          sudo chmod 777 /crave-devspaces
+        else
+          echo "We are already running in devspace... Skipping Symlinks"
+        fi
+        case "${{ github.event.inputs.BASE_PROJECT }}" in
+        "ArrowOS 13.1")
+         export PROJECTID="73"
+         export REPO_INIT="repo init -u https://github.com/ArrowOS/android_manifest.git -b arrow-13.1 --depth=1"
+        ;;
+        "DerpFest 13.0")
+           export REPO_INIT="repo init -u https://github.com/DerpFest-AOSP/manifest.git -b 13 --depth=1"
+        ;;
+        "LineageOS 21.0")
+          export PROJECTID="72"
+          export REPO_INIT="repo init -u https://github.com/LineageOS/android.git -b lineage-21.0 --git-lfs --depth=1"
+        ;;
+        "LineageOS 20.0")
+          export REPO_INIT="repo init -u https://github.com/accupara/los20.git -b lineage-20.0 --git-lfs --depth=1"
+        ;;
+        "CipherOS 14")
+          export REPO_INIT="repo init -u https://github.com/CipherOS/android_manifest.git -b fourteen --git-lfs --depth=1"
+        ;;
+        esac
+        cd /crave-devspaces/
+        export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
+        if [ ! -d "$FOLDERNAME" ]; then
+        mkdir "$FOLDERNAME"
+        fi
+        echo "PROJECTFOLDER=$PROJECTFOLDER" >> "$GITHUB_ENV
         
-    - name: Configure crave
+    
+      env:
+          FOLDERNAME: ${{ github.event.inputs.FOLDER_NAME }}
+        
+
+      # Check-out in order to access the repository's files.
+    - name: Check-out to repository
+      uses: actions/checkout@v4
+
+      # Set-up a spearate directory for the device.
+    - name: Cleanup
+      run: |
+        unset PROJECTFOLDER
+        unset DEVICE_CODENAME
+
+      # Download and configure 'repo'.
+    - name: Configure the 'repo' environment
+      run: |
+        # Check if repo is already installed
+        if ! command -v repo >/dev/null 2>&1; then
+          echo "Repo not found. Installing now..."
+          # Create bin directory if it doesn't exist
+          mkdir -p ~/bin
+          # Download repo script
+          curl https://storage.googleapis.com/git-repo-downloads/repo >> ~/bin/repo
+          # Make repo script executable
+          chmod a+x ~/bin/repo
+          # Create symbolic link to /usr/bin/repo
+          sudo ln -sf "/home/$(whoami)/bin/repo" "/usr/bin/repo"
+          echo "Repo installation complete."
+        else
+          echo "Repo already installed."
+        fi
+      continue-on-error: true
+
+      # Download and configure 'crave'.
+    - name: Configure the 'crave' environment
       run: |
         mkdir -p $PROJECTFOLDER/.repo/manifests
         if [ "${DCDEVSPACE}" == "1" ]; then
@@ -66,92 +141,54 @@ jobs:
         CRAVE_USERNAME: ${{  secrets.CRAVE_USERNAME  }}
         CRAVE_TOKEN: ${{  secrets.CRAVE_TOKEN  }}
 
-    - name: Test Local Manifests
-      run: |
-        # Check if repo is already installed
-        if ! command -v repo >/dev/null 2>&1; then
-          echo "Repo not found. Installing now..."
-          # Create bin directory if it doesn't exist
-          mkdir -p ~/bin
-          # Download repo script
-          curl https://storage.googleapis.com/git-repo-downloads/repo >> ~/bin/repo
-          # Make repo script executable
-          chmod a+x ~/bin/repo
-          # Create symbolic link to /usr/bin/repo
-          sudo ln -sf "/home/$(whoami)/bin/repo" "/usr/bin/repo"
-          echo "Repo installation complete."
-        else
-          echo "Repo already installed."
-        fi
-        git config --global user.name "${{ github.actor }}"
-        git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
-
-        # This cleans github actions workspace
-           unset PROJECTFOLDER
-           unset DEVICE_CODENAME
-
-      # Create a project folder
-    - name: Create Project Folders
-      run: |
-          if [ "${DCDEVSPACE}" != "1" ]; then
-          echo "Symlinking devspace folder"
-          mkdir -p devspace
-          sudo mkdir -p /crave-devspaces
-          sudo ln -sf ${pwd}/devspace /crave-devspaces
-          sudo chmod 777 /crave-devspaces
-          else
-          echo "We are already running in devspace... Skipping Symlinks"
-          fi
-          cd /crave-devspaces/
-          export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
-          if [ ! -d "$FOLDERNAME" ]; then
-          mkdir "$FOLDERNAME"
-          fi
-          echo "PROJECTFOLDER=$PROJECTFOLDER" >> "$GITHUB_ENV"
-    
-      env:
-          FOLDERNAME: ${{ github.event.inputs.FOLDER_NAME }}
         
-      # Check-out in order to access the repository's files.
-    - name: Check-out to repository
-      uses: actions/checkout@v4
-      
-      # Generate 'git' credential in base of the workflow's author.
-    - name: Set-up 'git' credential(s)
-      run: |
-        git config --global user.name "${{ github.actor }}"
-        git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
-    
-      # Only reach this wheter the user killed the workflow.
-    - name: Execute if the job is cancelled
-      if: ${{ cancelled() }}
-      run: |
-        cd $PROJECTFOLDER
-        crave stop --all
-
       # Upload '.zip's and '.img's directly from 'crave' ssh.
     - name: Upload build artifact(s)
       run: |
+        cd /crave-devspaces/
+        export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
+        if [ ! -d "$FOLDERNAME" ]; then
+        mkdir "$FOLDERNAME"
+        fi
+      
         cd $PROJECTFOLDER
-        crave pull out/target/product/*/Cherish-OS-v5.5-*.zip
+        rm -rf *
+        crave pull out/target/product/*/$ZIPNAME
         cd $DEVICE_CODENAME
-        rm -rf *.sh 
-        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
         rm -rf .img
         wget https://raw.githubusercontent.com/zaidanprjkt/device_xiaomi_juice/a2934e1451bbca5f0c23431dd80faaac0058a84a/prebuilt/boot.img 
-        zip -u Cherish-OS-v5.5-*.zip boot.img
-        chmod +rwx pixeldrain_upload.sh
-        bash pixeldrain_upload.sh >/dev/null 2>&1
-        rm -rf *.txt *.zip *.img
-        #cd citrus
-        #rm -rf *.sh
-        #wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
-        #chmod +rwx pixeldrain_upload.sh
-        bash pixeldrain_upload.sh >/dev/null 2>&1
+        zip -u "$ZIPNAME" boot.img
+        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/devupload_upload.sh
+        chmod +rwx devupload_upload.sh
+        bash devupload_upload.sh >/dev/null 2>&1
+        rm -rf *.sh *.txt *.img
+        cd ..
+        cd citrus
+        rm -rf *.sh
+        rm -rf .img
+        wget https://raw.githubusercontent.com/zaidanprjkt/device_xiaomi_juice/a2934e1451bbca5f0c23431dd80faaac0058a84a/prebuilt/boot.img 
+        zip -u "$ZIPNAME" boot.img
+        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/devupload_upload.sh
+        chmod +rwx devupload_upload.sh
+        bash devupload_upload.sh >/dev/null 2>&1
+        rm -rf *.sh
         
       env:
         TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
         ID_CHAT: ${{  secrets.ID_CHAT  }}
         pixeltoken: ${{  secrets.pixeltoken  }}
         DEVICE_CODENAME: ${{ github.event.inputs.DEVICE_CODENAME }}
+        ZIPNAME: ${{ github.event.inputs.ZIP_NAME }}
         
+        
+        
+      # Pull Errors and Display them
+    - name: Display error.log
+      if: ${{ failure() }}
+      id: errorlog
+      run: |
+        cd $PROJECTFOLDER
+        crave ssh -- sleep 1
+        crave pull out/error.log
+        echo "Displaying out/error.log"
+        cat out/error.log
