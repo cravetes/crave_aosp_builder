@@ -164,6 +164,7 @@ jobs:
         TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
         ID_CHAT: ${{  secrets.ID_CHAT  }}
         pixeltoken: ${{  secrets.pixeltoken  }}
+        FOLDERNAME: ${{ github.event.inputs.FOLDER_NAME }}
         DEVICE_CODENAME: ${{ github.event.inputs.DEVICE_CODENAME }}
         ZIPNAME: ${{ github.event.inputs.ZIP_NAME }}
         
