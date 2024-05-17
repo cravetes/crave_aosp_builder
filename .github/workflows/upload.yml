@@ -123,44 +123,32 @@ jobs:
           sudo ln -sf /home/${USER}/bin/crave /usr/bin/crave
           envsubst < ${PWD}/crave.conf.sample >> ${PWD}/crave.conf
           rm -rf ${PWD}/crave.conf.sample
+          crave -c crave.conf devspace
+          cd /crave-devspaces/
+          export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
+          if [ ! -d "$FOLDERNAME" ]; then
+          mkdir "$FOLDERNAME"
+          fi
+      
+          cd $PROJECTFOLDER
+          rm -rf *
+          crave pull out/target/product/*/$ZIPNAME
+          cd $DEVICE_CODENAME
+          wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/devupload_upload.sh
+          chmod +rwx devupload_upload.sh
+          bash devupload_upload.sh >/dev/null 2>&1
+          rm -rf *.sh *.txt *.img
+          cd ..
+          cd citrus
+          rm -rf *.sh
+          rm -rf .img
+          chmod +rwx devupload_upload.sh
+          bash devupload_upload.sh >/dev/null 2>&1
+          rm -rf *.sh
+         
       env:
         CRAVE_USERNAME: ${{  secrets.CRAVE_USERNAME  }}
         CRAVE_TOKEN: ${{  secrets.CRAVE_TOKEN  }}
-
-        
-      # Upload '.zip's and '.img's directly from 'crave' ssh.
-    - name: Upload build artifact(s)
-      run: |
-        crave -c crave.conf devspace
-        cd /crave-devspaces/
-        export PROJECTFOLDER="/crave-devspaces/$FOLDERNAME"
-        if [ ! -d "$FOLDERNAME" ]; then
-        mkdir "$FOLDERNAME"
-        fi
-      
-        cd $PROJECTFOLDER
-        rm -rf *
-        crave pull out/target/product/*/$ZIPNAME
-        cd $DEVICE_CODENAME
-        rm -rf .img
-        wget https://raw.githubusercontent.com/zaidanprjkt/device_xiaomi_juice/a2934e1451bbca5f0c23431dd80faaac0058a84a/prebuilt/boot.img 
-        zip -u "$ZIPNAME" boot.img
-        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/devupload_upload.sh
-        chmod +rwx devupload_upload.sh
-        bash devupload_upload.sh >/dev/null 2>&1
-        rm -rf *.sh *.txt *.img
-        cd ..
-        cd citrus
-        rm -rf *.sh
-        rm -rf .img
-        wget https://raw.githubusercontent.com/zaidanprjkt/device_xiaomi_juice/a2934e1451bbca5f0c23431dd80faaac0058a84a/prebuilt/boot.img 
-        zip -u "$ZIPNAME" boot.img
-        wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/devupload_upload.sh
-        chmod +rwx devupload_upload.sh
-        bash devupload_upload.sh >/dev/null 2>&1
-        rm -rf *.sh
-        
-      env:
         TOKEN_BOT_TELE: ${{  secrets.TOKEN_BOT_TELE  }}
         ID_CHAT: ${{  secrets.ID_CHAT  }}
         pixeltoken: ${{  secrets.pixeltoken  }}
