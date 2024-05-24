@@ -22,7 +22,7 @@ on:
       FOLDER_NAME:
         description: "Folder Name:"
         required: true
-        default: 'rising'
+        default: 'rising-3.0'
       DEVICE_CODENAME:
         description: "Your device codename: (ex. topaz, tissot)"
         required: true
