@@ -22,11 +22,11 @@ on:
       FOLDER_NAME:
         description: "Folder Name:"
         required: true
-        default: 'rising-3.1'
+        default: 'los'
       DEVICE_CODENAME:
         description: "Your device codename: (ex. topaz, tissot)"
         required: true
-        default: 'lime'
+        default: 'juice'
       
 jobs:
   run-devspace-and-tmux:
@@ -161,7 +161,7 @@ jobs:
       run: |
         cd $PROJECTFOLDER
     
-        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ sekerip && git clone -b rising https://github.com/newestzdn/sekerip && chmod +rwx sekerip/* && bash sekerip/build2.sh"
+        crave run --no-patch --${CLEAN} "rm -rf .repo/local_manifests/ sekerip && git clone -b los2 https://github.com/newestzdn/sekerip && chmod +rwx sekerip/* && bash sekerip/build2.sh"
       timeout-minutes: 720  
       
       # Only reach this wheter the user killed the workflow.
@@ -175,7 +175,7 @@ jobs:
     - name: Upload build artifact(s)
       run: |
         cd $PROJECTFOLDER
-        crave pull out/target/product/*/RisingOS-3.1-*.zip
+        crave pull out/target/product/*/lineage-*.zip
         cd $DEVICE_CODENAME
         rm -rf *.sh 
         wget https://raw.githubusercontent.com/newestzdn/anthrskrpt/main/pixeldrain_upload.sh
